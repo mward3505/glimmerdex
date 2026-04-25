@@ -7,6 +7,7 @@ export const useTrackerStore = defineStore('tracker', () => {
   const filterGen = ref('all')
   const filterStatus = ref('all')
   const filterMethod = ref('all')
+  const filterGame = ref('all')
   const page = ref(1)
   const PAGE_SIZE = 60
 
@@ -42,9 +43,12 @@ export const useTrackerStore = defineStore('tracker', () => {
       if (filterStatus.value === 'huntable' && p.status !== 'huntable') return false
 
       if (filterMethod.value !== 'all') {
-        const m1 = p.method?.id
-        const m2 = p.method2?.id
-        if (m1 !== filterMethod.value && m2 !== filterMethod.value) return false
+        const hasMethod = p.methods.some(m => m.id === filterMethod.value)
+        if (!hasMethod) return false
+      }
+
+      if (filterGame.value !== 'all') {
+        if (!p.games.includes(filterGame.value)) return false
       }
 
       return true
@@ -74,6 +78,7 @@ export const useTrackerStore = defineStore('tracker', () => {
     filterGen,
     filterStatus,
     filterMethod,
+    filterGame,
     page,
     PAGE_SIZE,
     filtered,

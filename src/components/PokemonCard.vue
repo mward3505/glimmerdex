@@ -22,7 +22,7 @@
 
     <div class="badges">
       <span class="status-badge">{{ statusLabel }}</span>
-      <span v-if="pokemon.method" class="odds-badge">{{ pokemon.method.odds }}</span>
+      <span v-if="pokemon.methods.length" class="odds-badge">{{ pokemon.methods[0].odds }}</span>
     </div>
 
     <button

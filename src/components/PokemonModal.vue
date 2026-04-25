@@ -37,34 +37,32 @@
           <p>{{ pokemon.notes || 'This Pokémon is shiny locked and cannot be obtained as shiny.' }}</p>
         </div>
 
-        <div v-else class="methods">
-          <div v-if="pokemon.method" class="method-card best">
-            <div class="method-label">Best Method</div>
-            <div class="method-name">{{ pokemon.method.name }}</div>
-            <div class="method-meta">
-              <span class="odds">{{ pokemon.method.odds }}</span>
-              <span class="game">{{ pokemon.method.game }}</span>
+        <template v-else-if="pokemon.methods.length">
+          <div class="methods-label">Hunt Methods <span class="count">({{ pokemon.methods.length }})</span></div>
+          <div class="methods">
+            <div
+              v-for="(m, i) in pokemon.methods"
+              :key="m.id"
+              class="method-card"
+              :class="rankClass(i)"
+            >
+              <div class="method-rank">{{ rankLabel(i) }}</div>
+              <div class="method-name">{{ m.name }}</div>
+              <div class="method-meta">
+                <span class="odds">{{ m.odds }}</span>
+                <span class="game">{{ m.game }}</span>
+              </div>
+              <p v-if="m.notes" class="method-notes">{{ m.notes }}</p>
             </div>
-            <p v-if="pokemon.method.notes" class="method-notes">{{ pokemon.method.notes }}</p>
           </div>
+        </template>
 
-          <div v-if="pokemon.method2" class="method-card second">
-            <div class="method-label">Second Best</div>
-            <div class="method-name">{{ pokemon.method2.name }}</div>
-            <div class="method-meta">
-              <span class="odds">{{ pokemon.method2.odds }}</span>
-              <span class="game">{{ pokemon.method2.game }}</span>
-            </div>
-            <p v-if="pokemon.method2.notes" class="method-notes">{{ pokemon.method2.notes }}</p>
-          </div>
-
-          <div v-if="pokemon.status === 'event' && !pokemon.method" class="method-card event">
-            <div class="method-label">Availability</div>
-            <p class="method-notes">{{ pokemon.notes }}</p>
-          </div>
+        <div v-else-if="pokemon.status === 'event'" class="method-card event">
+          <div class="method-rank">Availability</div>
+          <p class="method-notes">{{ pokemon.notes }}</p>
         </div>
 
-        <p v-if="pokemon.notes && pokemon.status !== 'locked' && pokemon.status !== 'event'" class="extra-notes">
+        <p v-if="pokemon.notes && pokemon.status === 'huntable'" class="extra-notes">
           {{ pokemon.notes }}
         </p>
       </div>
@@ -94,6 +92,12 @@ const bigStatusLabel = computed(() => {
   if (isCaught.value) return '✨ Caught'
   return 'Remaining'
 })
+
+const RANK_CLASSES = ['best', 'second', 'third', 'fourth', 'fifth']
+const RANK_LABELS  = ['Best Method', '2nd Best', '3rd Best', '4th', '5th']
+
+function rankClass(i) { return RANK_CLASSES[i] ?? 'other' }
+function rankLabel(i) { return RANK_LABELS[i] ?? `#${i + 1}` }
 </script>
 
 <style scoped>
@@ -114,7 +118,7 @@ const bigStatusLabel = computed(() => {
   border-radius: 14px;
   padding: 1.5rem;
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
@@ -131,7 +135,6 @@ const bigStatusLabel = computed(() => {
   cursor: pointer;
   transition: color 0.15s;
 }
-
 .close:hover { color: #cdd6f4; }
 
 .header {
@@ -159,11 +162,7 @@ const bigStatusLabel = computed(() => {
 
 .dex-num { font-size: 0.75rem; color: #6c7086; }
 
-h2 {
-  margin: 0;
-  font-size: 1.3rem;
-  color: #cdd6f4;
-}
+h2 { margin: 0; font-size: 1.3rem; color: #cdd6f4; }
 
 .gen-tag {
   font-size: 0.75rem;
@@ -190,9 +189,7 @@ h2 {
   background: #313244;
   color: #a6adc8;
 }
-
-.big-status.huntable { background: #313244; color: #a6adc8; }
-.big-status.event { background: #89b4fa22; color: #89b4fa; }
+.big-status.event  { background: #89b4fa22; color: #89b4fa; }
 .big-status.locked { background: #31324455; color: #585b70; }
 
 .catch-toggle {
@@ -206,8 +203,7 @@ h2 {
   transition: background 0.15s;
   white-space: nowrap;
 }
-
-.catch-toggle:hover { background: #45475a; }
+.catch-toggle:hover  { background: #45475a; }
 .catch-toggle.caught { border-color: #f9e2af; color: #f9e2af; background: #f9e2af11; }
 
 .locked-msg {
@@ -219,25 +215,39 @@ h2 {
   line-height: 1.5;
 }
 
+.methods-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6c7086;
+  margin-bottom: 0.5rem;
+}
+.count { color: #45475a; }
+
 .methods {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .method-card {
   border-radius: 10px;
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.25rem;
+  border: 1px solid transparent;
 }
 
-.method-card.best { background: #cba6f711; border: 1px solid #cba6f744; }
-.method-card.second { background: #89dceb11; border: 1px solid #89dceb44; }
-.method-card.event { background: #89b4fa11; border: 1px solid #89b4fa44; }
+.method-card.best   { background: #cba6f711; border-color: #cba6f744; }
+.method-card.second { background: #89dceb11; border-color: #89dceb33; }
+.method-card.third  { background: #a6e3a111; border-color: #a6e3a133; }
+.method-card.fourth,
+.method-card.fifth,
+.method-card.other  { background: #31324433; border-color: #45475a44; }
+.method-card.event  { background: #89b4fa11; border-color: #89b4fa44; }
 
-.method-label {
+.method-rank {
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -245,7 +255,7 @@ h2 {
 }
 
 .method-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #cdd6f4;
 }
@@ -257,7 +267,7 @@ h2 {
 }
 
 .odds {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #a6e3a1;
 }
@@ -271,7 +281,7 @@ h2 {
   font-size: 0.8rem;
   color: #a6adc8;
   line-height: 1.5;
-  margin: 0.2rem 0 0;
+  margin: 0.15rem 0 0;
 }
 
 .extra-notes {
